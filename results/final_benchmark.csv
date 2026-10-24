@@ -1,0 +1,6 @@
+system,exact_match,token_f1,avg_tokens_in,avg_tokens_out,avg_total_tokens,avg_executed_k,p50_total_latency_ms,p95_total_latency_ms,p50_router_latency_ms,p95_router_latency_ms,p50_retrieval_latency_ms,p95_retrieval_latency_ms,p50_generation_latency_ms,p95_generation_latency_ms,under_retrieval_rate
+baseline_k0,0.0,0.0,33.6,1.0,34.6,0.0,14.35,19.07,0.0,0.0,0.01,0.02,14.34,19.05,0.0498
+baseline_k3,0.0,0.105,438.3,31.9,470.2,3.0,39.95,77.99,0.0,0.0,23.79,51.92,16.15,21.97,0.0
+baseline_k5,0.0,0.105,682.8,31.9,714.8,5.0,39.71,73.11,0.0,0.0,22.56,43.68,16.58,21.91,0.0
+baseline_k10,0.0,0.105,1344.2,31.9,1376.2,10.0,38.5,67.77,0.0,0.0,21.8,48.42,17.05,20.75,0.0
+adaptive_router,0.0,0.105,1992.7,31.9,2024.6,15.0,28.69,63.95,2.0,6.08,23.99,55.72,2.49,3.12,0.0
