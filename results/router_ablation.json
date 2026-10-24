@@ -1,0 +1,68 @@
+[
+  {
+    "experiment_id": "logreg_linguistic",
+    "model_name": "LogisticRegression",
+    "feature_type": "linguistic",
+    "accuracy": 0.7625,
+    "macro_f1": 0.3516,
+    "weighted_f1": 0.8322,
+    "latency_ms_per_query": 0.003,
+    "train_time_ms": 26.2,
+    "feature_dim": 14
+  },
+  {
+    "experiment_id": "logreg_embedding",
+    "model_name": "LogisticRegression",
+    "feature_type": "embedding",
+    "accuracy": 0.8562,
+    "macro_f1": 0.3756,
+    "weighted_f1": 0.8857,
+    "latency_ms_per_query": 0.003,
+    "train_time_ms": 18.9,
+    "feature_dim": 384
+  },
+  {
+    "experiment_id": "xgboost_linguistic",
+    "model_name": "XGBoost",
+    "feature_type": "linguistic",
+    "accuracy": 0.9532,
+    "macro_f1": 0.3253,
+    "weighted_f1": 0.9303,
+    "latency_ms_per_query": 0.006,
+    "train_time_ms": 111.2,
+    "feature_dim": 14
+  },
+  {
+    "experiment_id": "xgboost_hybrid",
+    "model_name": "XGBoost",
+    "feature_type": "hybrid",
+    "accuracy": 0.9532,
+    "macro_f1": 0.3253,
+    "weighted_f1": 0.9303,
+    "latency_ms_per_query": 0.012,
+    "train_time_ms": 1201.6,
+    "feature_dim": 398
+  },
+  {
+    "experiment_id": "small_encoder_mlp_embedding",
+    "model_name": "SmallEncoderMLP",
+    "feature_type": "embedding",
+    "accuracy": 0.9532,
+    "macro_f1": 0.3253,
+    "weighted_f1": 0.9303,
+    "latency_ms_per_query": 0.002,
+    "train_time_ms": 107.7,
+    "feature_dim": 384
+  },
+  {
+    "experiment_id": "small_encoder_mlp_hybrid",
+    "model_name": "SmallEncoderMLP",
+    "feature_type": "hybrid",
+    "accuracy": 0.9532,
+    "macro_f1": 0.3253,
+    "weighted_f1": 0.9303,
+    "latency_ms_per_query": 0.002,
+    "train_time_ms": 77.4,
+    "feature_dim": 398
+  }
+]

@@ -1,0 +1,7 @@
+experiment_id,model_name,feature_type,accuracy,macro_f1,weighted_f1,latency_ms_per_query,train_time_ms,feature_dim
+logreg_linguistic,LogisticRegression,linguistic,0.7625,0.3516,0.8322,0.003,26.2,14
+logreg_embedding,LogisticRegression,embedding,0.8562,0.3756,0.8857,0.003,18.9,384
+xgboost_linguistic,XGBoost,linguistic,0.9532,0.3253,0.9303,0.006,111.2,14
+xgboost_hybrid,XGBoost,hybrid,0.9532,0.3253,0.9303,0.012,1201.6,398
+small_encoder_mlp_embedding,SmallEncoderMLP,embedding,0.9532,0.3253,0.9303,0.002,107.7,384
+small_encoder_mlp_hybrid,SmallEncoderMLP,hybrid,0.9532,0.3253,0.9303,0.002,77.4,398
