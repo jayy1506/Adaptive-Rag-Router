@@ -1,0 +1,39 @@
+# Configuration for Adaptive-Retrieval RAG Router
+
+project:
+  name: "adaptive-rag-router"
+  seed: 42
+  results_dir: "results"
+  data_dir: "data"
+
+data:
+  hotpotqa_sample_size: 1000
+  nq_sample_size: 1000
+  splits:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+  processed_dir: "data/processed"
+  raw_cache_dir: "data/raw"
+
+retrieval:
+  chroma_db_dir: "data/chroma_db"
+  collection_name: "rag_router_passages"
+  embedding_model: "all-MiniLM-L6-v2"
+  batch_size: 64
+
+router:
+  candidate_k_values: [0, 3, 8, 15]
+  baseline_k_values: [0, 3, 5, 10]
+  confidence_threshold: 0.65
+  escalation_k: 15
+  model_save_path: "results/router_model.joblib"
+  cache_db_path: "data/llm_cache.sqlite"
+
+evaluation:
+  metrics: ["em", "f1", "cost_tokens", "latency_ms", "under_retrieval_rate"]
+  pareto_accuracy_metric: "f1"
+
+api:
+  host: "0.0.0.0"
+  port: 8000
