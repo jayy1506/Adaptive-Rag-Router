@@ -1,0 +1,28 @@
+{
+  "candidate_k": [
+    0,
+    3,
+    8,
+    15
+  ],
+  "val": {
+    "total": 299,
+    "distribution": {
+      "0": 0,
+      "3": 9,
+      "8": 5,
+      "15": 285
+    },
+    "output_path": "data\\processed\\val_labeled.jsonl"
+  },
+  "train": {
+    "total": 1399,
+    "distribution": {
+      "0": 0,
+      "3": 67,
+      "8": 1,
+      "15": 1331
+    },
+    "output_path": "data\\processed\\train_labeled.jsonl"
+  }
+}
