@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+data/raw/
+data/chroma_db/
+*.sqlite
+.env
+.DS_Store
