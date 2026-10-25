@@ -53,6 +53,7 @@ def label_dataset(
     generator: RAGGenerator,
     f1_threshold: float = 0.5,
     max_records: int | None = None,
+    force_relabel: bool = False,
 ) -> dict[str, Any]:
     in_file = Path(input_path)
     out_file = Path(output_path)
@@ -60,7 +61,7 @@ def label_dataset(
 
     # Check for existing labeled records to resume
     existing_records: dict[str, dict[str, Any]] = {}
-    if out_file.exists():
+    if out_file.exists() and not force_relabel:
         with open(out_file, "r", encoding="utf-8") as f:
             for line in f:
                 if line.strip():
@@ -80,15 +81,18 @@ def label_dataset(
     total_queries = len(queries)
     logger.info(f"Labeling {total_queries} queries from {input_path} across candidate k={candidate_k}...")
 
-    labeled_items: list[dict[str, Any]] = list(existing_records.values())
+    labeled_items: list[dict[str, Any]] = list(existing_records.values()) if not force_relabel else []
     label_counts: dict[int, int] = {k: 0 for k in candidate_k}
 
-    with open(out_file, "a" if existing_records else "w", encoding="utf-8") as out_f:
+    with open(out_file, "w" if force_relabel or not existing_records else "a", encoding="utf-8") as out_f:
         for idx, q in enumerate(queries):
-            if q.query_id in existing_records:
-                opt_k = existing_records[q.query_id]["optimal_k"]
-                label_counts[opt_k] = label_counts.get(opt_k, 0) + 1
-                continue
+            existing = existing_records.get(q.query_id)
+            if existing and not force_relabel:
+                existing_evals = existing.get("k_evaluations", {})
+                if all(str(k) in existing_evals or k in existing_evals for k in candidate_k):
+                    opt_k = existing["optimal_k"]
+                    label_counts[opt_k] = label_counts.get(opt_k, 0) + 1
+                    continue
 
             k_evaluations: dict[int, dict[str, Any]] = {}
             k_scores_summary: dict[int, dict[str, float]] = {}
@@ -97,11 +101,10 @@ def label_dataset(
             max_k = max(candidate_k)
             all_retrieved = retriever.retrieve(q.query, k=max_k) if max_k > 0 else []
 
-            # Evaluate candidate k in ascending order; break as soon as threshold is met (cheapest k)
-            optimal_k = None
+            # Evaluate all candidate k in {0, 3, 8, 15} to score every answer
             for k in candidate_k:
                 passages_k = all_retrieved[:k] if k > 0 else []
-                gen_res = generator.generate(q.query, k=k, passages=passages_k)
+                gen_res = generator.generate(q.query, k=k, passages=passages_k, use_cache=True)
                 scores = evaluate_prediction(gen_res["answer"], q.answers)
 
                 k_evaluations[k] = {
@@ -113,13 +116,7 @@ def label_dataset(
                 }
                 k_scores_summary[k] = scores
 
-                # ponytail: early stop once cheapest sufficient k achieves target F1
-                if scores["em"] >= 1.0 or scores["f1"] >= f1_threshold:
-                    optimal_k = k
-                    break
-
-            if optimal_k is None:
-                optimal_k = assign_cheapest_k(k_scores_summary, candidate_k, f1_threshold=f1_threshold)
+            optimal_k = assign_cheapest_k(k_scores_summary, candidate_k, f1_threshold=f1_threshold)
             label_counts[optimal_k] = label_counts.get(optimal_k, 0) + 1
 
             record = {
@@ -147,7 +144,7 @@ def label_dataset(
     }
 
 
-def run_labeling():
+def run_labeling(force_relabel: bool = False):
     cfg = load_config()
     candidate_k = cfg.get("router", {}).get("candidate_k_values", [0, 3, 8, 15])
     retriever = ChromaRetriever()
@@ -161,6 +158,7 @@ def run_labeling():
         candidate_k=candidate_k,
         retriever=retriever,
         generator=generator,
+        force_relabel=force_relabel,
     )
 
     # Label training split
@@ -171,6 +169,7 @@ def run_labeling():
         candidate_k=candidate_k,
         retriever=retriever,
         generator=generator,
+        force_relabel=force_relabel,
     )
 
     summary = {
@@ -190,4 +189,6 @@ def run_labeling():
 
 
 if __name__ == "__main__":
-    run_labeling()
+    import sys
+    force = "--force" in sys.argv
+    run_labeling(force_relabel=force)
