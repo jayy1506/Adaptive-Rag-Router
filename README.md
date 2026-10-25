@@ -126,6 +126,57 @@ Open **[http://localhost:8000](http://localhost:8000)** in your browser to view 
 
 ---
 
+## 🌐 100% Free Cloud Deployment
+
+This repository is pre-configured with a production `Dockerfile` and `render.yaml` for zero-cost cloud deployment.
+
+### Option A: Hugging Face Spaces (⭐ Recommended — 16 GB Free RAM)
+Hugging Face Spaces offers a **permanent 100% free tier** with **2 vCPU, 16 GB RAM, and 50 GB storage** with **no credit card required**!
+
+1. Go to **[huggingface.co/new-space](https://huggingface.co/new-space)** (create a free account if needed).
+2. Set **Space name** to `adaptive-rag-router`.
+3. Under **Space SDK**, select **Docker** $\to$ **Blank**.
+4. Under **Space Hardware**, ensure **CPU basic • 2 vCPU • 16 GB • FREE** is selected.
+5. Click **Create Space**.
+6. Connect your GitHub repository:
+   - Go to Space **Settings** $\to$ **GitHub Repos** $\to$ connect `jayy1506/Adaptive-Rag-Router`.
+   - *Or* push via git remote:
+     ```bash
+     git remote add space https://huggingface.co/spaces/<YOUR_USERNAME>/adaptive-rag-router
+     git push space main
+     ```
+7. Hugging Face will automatically build the `Dockerfile`, bake the Chroma index, and launch the interactive dashboard live at:
+   `https://<YOUR_USERNAME>-adaptive-rag-router.hf.space`
+
+---
+
+### Option B: Render.com (Free Web Service)
+Render provides free cloud hosting with HTTPS and automatic CI/CD from GitHub.
+
+1. Sign up or log into **[render.com](https://render.com)** using your GitHub account.
+2. Click **New +** $\to$ **Web Service**.
+3. Choose **Build and deploy from a Git repository** and connect `jayy1506/Adaptive-Rag-Router`.
+4. Configure the service:
+   - **Name**: `adaptive-rag-router`
+   - **Environment**: `Docker`
+   - **Instance Type**: `Free` ($0/mo)
+5. Click **Deploy Web Service**.
+6. Render builds the container and provides your live public URL: `https://adaptive-rag-router.onrender.com`.
+
+---
+
+### Option C: Run with Docker Locally
+```bash
+# Build the container image
+docker build -t adaptive-rag-router .
+
+# Run the container
+docker run -p 8000:7860 -e PORT=7860 adaptive-rag-router
+```
+Navigate to **http://localhost:8000** to use the live dashboard.
+
+---
+
 ## 🔌 API Endpoints
 
 ### `POST /predict`

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: adaptive-rag-router
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /docs
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 10000

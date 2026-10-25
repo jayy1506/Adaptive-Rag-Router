@@ -112,7 +112,12 @@ class AdaptiveRetrievalPipeline:
 
         # Stage 1: Feature Extraction & Routing Prediction
         t0_router = time.perf_counter()
-        is_math = self.generator._try_evaluate_math(query) is not None
+        math_eval = (
+            self.generator._try_evaluate_math(query)
+            if hasattr(self.generator, "_try_evaluate_math")
+            else None
+        )
+        is_math = isinstance(math_eval, str) and len(math_eval.strip()) > 0
 
         if is_math:
             pred_k, confidence, prob_dict = 0, 0.99, {0: 0.99, 3: 0.01, 8: 0.0, 15: 0.0}

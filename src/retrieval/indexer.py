@@ -36,6 +36,9 @@ class ChromaRetriever:
             embedding_function=self.ef,
             metadata={"hnsw:space": "cosine"},
         )
+        if self.collection.count() == 0 and Path("data/processed/passages.jsonl").exists():
+            logger.info("Chroma index empty. Initializing index from passages.jsonl...")
+            self.build_index()
 
     def count(self) -> int:
         return self.collection.count()

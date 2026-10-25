@@ -188,3 +188,13 @@ dashboard_dir = Path(__file__).resolve().parent.parent / "dashboard"
 if dashboard_dir.exists():
     app.mount("/", StaticFiles(directory=str(dashboard_dir), html=True), name="dashboard")
 
+
+if __name__ == "__main__":
+    import os
+    import uvicorn
+
+    port = int(os.environ.get("PORT", 8000))
+    host = os.environ.get("HOST", "0.0.0.0")
+    logger.info(f"Starting server on {host}:{port}")
+    uvicorn.run("src.api.server:app", host=host, port=port, reload=False)
+
