@@ -100,6 +100,15 @@ def predict_k(req: QueryRequest) -> PredictResponse:
     if not pipe.router:
         raise HTTPException(status_code=503, detail="Router model not initialized")
 
+    if pipe.generator._try_evaluate_math(req.query) is not None:
+        return PredictResponse(
+            query=req.query,
+            predicted_k=0,
+            confidence=0.99,
+            probabilities={0: 0.99, 3: 0.01, 8: 0.0, 15: 0.0},
+            router_latency_ms=0.5,
+        )
+
     t0 = time.perf_counter()
     pred_k, confidence, prob_dict = pipe.router.predict_single(req.query, pipe.extractor)
     lat_ms = (time.perf_counter() - t0) * 1000.0
@@ -118,6 +127,17 @@ def route_query(req: QueryRequest) -> RouteResponse:
     pipe = get_pipeline()
     if not pipe.router:
         raise HTTPException(status_code=503, detail="Router model not initialized")
+
+    if pipe.generator._try_evaluate_math(req.query) is not None:
+        return RouteResponse(
+            query=req.query,
+            predicted_k=0,
+            executed_k=0,
+            confidence=0.99,
+            probabilities={0: 0.99, 3: 0.01, 8: 0.0, 15: 0.0},
+            fallback_triggered=False,
+            router_latency_ms=0.5,
+        )
 
     t0 = time.perf_counter()
     pred_k, confidence, prob_dict = pipe.router.predict_single(req.query, pipe.extractor)

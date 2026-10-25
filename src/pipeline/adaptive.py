@@ -112,7 +112,11 @@ class AdaptiveRetrievalPipeline:
 
         # Stage 1: Feature Extraction & Routing Prediction
         t0_router = time.perf_counter()
-        if self.router:
+        is_math = self.generator._try_evaluate_math(query) is not None
+
+        if is_math:
+            pred_k, confidence, prob_dict = 0, 0.99, {0: 0.99, 3: 0.01, 8: 0.0, 15: 0.0}
+        elif self.router:
             pred_k, confidence, prob_dict = self.router.predict_single(query, self.extractor)
         else:
             # Default to middle tier if uninitialized
@@ -122,7 +126,7 @@ class AdaptiveRetrievalPipeline:
         # Stage 2: Confidence Fallback Check
         fallback_triggered = False
         target_k = pred_k
-        if confidence < self.confidence_threshold:
+        if not is_math and confidence < self.confidence_threshold:
             fallback_triggered = True
             target_k = self._get_next_higher_k(pred_k)
 

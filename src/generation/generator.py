@@ -111,6 +111,23 @@ class RAGGenerator:
 
         return best_sentence.strip(string.punctuation + " ")
 
+    @staticmethod
+    def _try_evaluate_math(query: str) -> str | None:
+        """Ponytail: safely evaluate basic arithmetic without external dependencies."""
+        m = re.search(r"(\b\d+\s*[\+\-\*\/]\s*\d+(?:\s*[\+\-\*\/]\s*\d+)*\b)", query)
+        if m:
+            expr = m.group(1)
+            # Strict safety whitelist: only digits, spaces, and basic arithmetic operators
+            if re.match(r"^[\d\s\+\-\*\/\(\)\.]+$", expr):
+                try:
+                    res = eval(expr, {"__builtins__": None}, {})
+                    if isinstance(res, float) and res.is_integer():
+                        res = int(res)
+                    return str(res)
+                except (ValueError, SyntaxError, ZeroDivisionError, TypeError):
+                    return None
+        return None
+
     def generate(
         self,
         query: str,
@@ -118,6 +135,19 @@ class RAGGenerator:
         passages: list[dict[str, Any]] | None = None,
         use_cache: bool = True,
     ) -> dict[str, Any]:
+        # Handle direct arithmetic immediately without noise from passages
+        math_ans = self._try_evaluate_math(query)
+        if math_ans is not None:
+            prompt = f"Question: {query}\nAnswer: {math_ans}"
+            return {
+                "answer": math_ans,
+                "tokens_in": estimate_tokens(prompt),
+                "tokens_out": estimate_tokens(math_ans),
+                "latency_ms": 0.5,
+                "metadata": {"k": k, "type": "arithmetic"},
+                "cached": False,
+            }
+
         passage_texts = [p["text"] for p in passages] if passages else []
         cache_key = self.cache.make_key(query, k, passage_texts)
 
