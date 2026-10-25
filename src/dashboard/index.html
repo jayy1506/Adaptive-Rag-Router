@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adaptive RAG Router | Interactive Telemetry & Routing</title>
+  <meta name="description" content="Adaptive-Retrieval RAG Router: per-query dynamic retrieval routing with confidence fallback and sufficiency escalation.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-area">
+        <div class="logo-icon">⚡</div>
+        <div>
+          <h1>Adaptive RAG Router</h1>
+          <p class="subtitle">Per-Query Dynamic Retrieval Classifier with Confidence Fallback</p>
+        </div>
+      </div>
+      <div class="system-status">
+        <span class="status-dot"></span>
+        <span id="apiStatusText">System Active</span>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" id="tabLiveBtn" onclick="switchTab('live')">🚀 Live Router Sandbox</button>
+      <button class="tab-btn" id="tabBenchBtn" onclick="switchTab('bench')">📊 Benchmark & Pareto Frontier</button>
+      <button class="tab-btn" id="tabAblationBtn" onclick="switchTab('ablation')">🔬 Model Ablation Suite</button>
+    </nav>
+
+    <!-- TAB 1: Live Query Sandbox -->
+    <main id="liveView" class="tab-content active">
+      <section class="card input-section">
+        <h2>Query Router Sandbox</h2>
+        <div class="input-group">
+          <input 
+            type="text" 
+            id="queryInput" 
+            placeholder="Type a question (e.g. When was Arthur's Magazine first published?)" 
+            autocomplete="off"
+            value="When was Arthur's Magazine first published?"
+          >
+          <button class="btn btn-primary" id="btnExecuteQuery" onclick="handleRunQuery()">Execute Pipeline</button>
+          <button class="btn btn-secondary" id="btnRouteOnly" onclick="handleRouteOnly()">Route Only</button>
+        </div>
+
+        <div class="sample-queries">
+          <span>Sample queries:</span>
+          <button class="chip" onclick="setQuery('When was Arthur\'s Magazine first published?')">Arthur's Magazine</button>
+          <button class="chip" onclick="setQuery('Who directed Inception?')">Inception Director</button>
+          <button class="chip" onclick="setQuery('What is 2 + 2?')">Parametric Math (k=0)</button>
+          <button class="chip" onclick="setQuery('Who was the king of England during the American Revolutionary War?')">George III</button>
+        </div>
+      </section>
+
+      <!-- Results Grid -->
+      <div class="results-grid" id="resultsGrid" style="display: none;">
+        <!-- Left: Routing Decision & Probability Gauge -->
+        <section class="card decision-card">
+          <div class="card-header">
+            <h3>Routing Telemetry</h3>
+            <span class="badge" id="executedKBadge">k = 15</span>
+          </div>
+
+          <div class="metrics-row">
+            <div class="metric-box">
+              <span class="metric-label">Predicted K</span>
+              <span class="metric-val" id="metricPredK">-</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-label">Confidence</span>
+              <span class="metric-val" id="metricConfidence">-</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-label">Fallback</span>
+              <span class="metric-val" id="metricFallback">-</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-label">Escalation</span>
+              <span class="metric-val" id="metricEscalation">-</span>
+            </div>
+          </div>
+
+          <div class="probability-distribution">
+            <h4>Class Probability Distribution</h4>
+            <div id="probBarsContainer" class="prob-bars"></div>
+          </div>
+
+          <!-- Latency Waterfall -->
+          <div class="waterfall-section">
+            <h4>Latency Waterfall</h4>
+            <div class="waterfall-bar">
+              <div id="barRouter" class="bar-segment router" style="width: 10%;"></div>
+              <div id="barRetrieval" class="bar-segment retrieval" style="width: 45%;"></div>
+              <div id="barGeneration" class="bar-segment generation" style="width: 45%;"></div>
+            </div>
+            <div class="waterfall-legend">
+              <span class="leg-item"><span class="dot dot-router"></span> Router: <strong id="latRouterText">0ms</strong></span>
+              <span class="leg-item"><span class="dot dot-retrieval"></span> Retrieval: <strong id="latRetrievalText">0ms</strong></span>
+              <span class="leg-item"><span class="dot dot-generation"></span> Generation: <strong id="latGenText">0ms</strong></span>
+              <span class="leg-item">Total: <strong id="latTotalText">0ms</strong></span>
+            </div>
+          </div>
+
+          <div class="tokens-section">
+            <span class="token-chip">Prompt Tokens: <strong id="promptTokensText">0</strong></span>
+            <span class="token-chip">Completion Tokens: <strong id="completionTokensText">0</strong></span>
+            <span class="token-chip highlight">Total Tokens: <strong id="totalTokensText">0</strong></span>
+          </div>
+        </section>
+
+        <!-- Right: Generated Answer & Retrieved Passages -->
+        <section class="card content-card">
+          <div class="card-header">
+            <h3>Generated Response</h3>
+            <span class="badge badge-success" id="answerStatusBadge">Generated</span>
+          </div>
+          <div class="answer-box" id="answerBox">
+            <p id="answerText">Run a query to view the synthesized answer.</p>
+          </div>
+
+          <div class="passages-header">
+            <h4>Retrieved Passages (<span id="passagesCount">0</span>)</h4>
+          </div>
+          <div class="passages-list" id="passagesList">
+            <p class="placeholder-text">No passages retrieved yet.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- TAB 2: Benchmark & Pareto Frontier -->
+    <main id="benchView" class="tab-content">
+      <section class="card">
+        <h2>Comprehensive Benchmark (Isolated Test Split)</h2>
+        <p class="section-desc">Comparison of fixed retrieval policies (k=0, 3, 5, 10) against our Adaptive Router across 301 test queries.</p>
+        
+        <div class="table-wrapper">
+          <table class="benchmark-table" id="benchmarkTable">
+            <thead>
+              <tr>
+                <th>System</th>
+                <th>Avg k</th>
+                <th>Exact Match</th>
+                <th>Token F1</th>
+                <th>Total Tokens</th>
+                <th>p50 Latency</th>
+                <th>p95 Latency</th>
+                <th>Under-Retrieval Rate</th>
+              </tr>
+            </thead>
+            <tbody id="benchmarkTableBody">
+              <tr><td colspan="8" class="text-center">Loading benchmark data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card plots-grid">
+        <div class="plot-box">
+          <h3>Pareto Frontier: Accuracy vs. Inference Cost</h3>
+          <img src="/results/pareto_accuracy_vs_cost.png" alt="Pareto Accuracy vs Cost" class="pareto-img">
+        </div>
+        <div class="plot-box">
+          <h3>Pareto Frontier: Accuracy vs. p50 Latency</h3>
+          <img src="/results/pareto_accuracy_vs_latency.png" alt="Pareto Accuracy vs Latency" class="pareto-img">
+        </div>
+      </section>
+    </main>
+
+    <!-- TAB 3: Model Ablation Suite -->
+    <main id="ablationView" class="tab-content">
+      <section class="card">
+        <h2>Classifier Ablation Results</h2>
+        <p class="section-desc">Evaluation of 6 model + feature configurations on the validation split.</p>
+        <div class="table-wrapper">
+          <table class="benchmark-table" id="ablationTable">
+            <thead>
+              <tr>
+                <th>Experiment ID</th>
+                <th>Model Architecture</th>
+                <th>Feature Set</th>
+                <th>Feature Dim</th>
+                <th>Accuracy</th>
+                <th>Weighted F1</th>
+                <th>Query Latency</th>
+                <th>Training Time</th>
+              </tr>
+            </thead>
+            <tbody id="ablationTableBody">
+              <tr><td colspan="8" class="text-center">Loading ablation data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
