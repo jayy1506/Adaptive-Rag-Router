@@ -6,8 +6,8 @@
     "accuracy": 0.7625,
     "macro_f1": 0.3516,
     "weighted_f1": 0.8322,
-    "latency_ms_per_query": 0.003,
-    "train_time_ms": 26.2,
+    "latency_ms_per_query": 0.004,
+    "train_time_ms": 49.8,
     "feature_dim": 14
   },
   {
@@ -18,7 +18,7 @@
     "macro_f1": 0.3756,
     "weighted_f1": 0.8857,
     "latency_ms_per_query": 0.003,
-    "train_time_ms": 18.9,
+    "train_time_ms": 45.1,
     "feature_dim": 384
   },
   {
@@ -28,8 +28,8 @@
     "accuracy": 0.9532,
     "macro_f1": 0.3253,
     "weighted_f1": 0.9303,
-    "latency_ms_per_query": 0.006,
-    "train_time_ms": 111.2,
+    "latency_ms_per_query": 0.011,
+    "train_time_ms": 148.2,
     "feature_dim": 14
   },
   {
@@ -39,8 +39,8 @@
     "accuracy": 0.9532,
     "macro_f1": 0.3253,
     "weighted_f1": 0.9303,
-    "latency_ms_per_query": 0.012,
-    "train_time_ms": 1201.6,
+    "latency_ms_per_query": 0.009,
+    "train_time_ms": 1856.3,
     "feature_dim": 398
   },
   {
@@ -50,8 +50,8 @@
     "accuracy": 0.9532,
     "macro_f1": 0.3253,
     "weighted_f1": 0.9303,
-    "latency_ms_per_query": 0.002,
-    "train_time_ms": 107.7,
+    "latency_ms_per_query": 0.004,
+    "train_time_ms": 165.7,
     "feature_dim": 384
   },
   {
@@ -61,8 +61,8 @@
     "accuracy": 0.9532,
     "macro_f1": 0.3253,
     "weighted_f1": 0.9303,
-    "latency_ms_per_query": 0.002,
-    "train_time_ms": 77.4,
+    "latency_ms_per_query": 0.003,
+    "train_time_ms": 150.9,
     "feature_dim": 398
   }
 ]
