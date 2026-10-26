@@ -72,7 +72,7 @@ jobs:
 
       - name: Auto-Close Previous Incident If Recovered
         if: success()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const issueTitle = '[Alert] Render Service Unresponsive';
@@ -103,7 +103,7 @@ jobs:
 
       - name: Open Incident Issue & Email Alert on Failure
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const issueTitle = '[Alert] Render Service Unresponsive';
