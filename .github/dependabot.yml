@@ -1,0 +1,35 @@
+# Dependabot configuration for automated dependency security and updates
+version: 2
+updates:
+  # Check GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    open-pull-requests-limit: 5
+
+  # Check Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "Etc/UTC"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    open-pull-requests-limit: 5
+    # Do not auto-merge; all PRs must run through CI tests
+    reviewers:
+      - "jayy1506"
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"

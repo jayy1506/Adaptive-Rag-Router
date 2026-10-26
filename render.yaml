@@ -5,8 +5,8 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /docs
-    autoDeploy: true
+    healthCheckPath: /health
+    autoDeploy: false
     envVars:
       - key: PORT
         value: 10000

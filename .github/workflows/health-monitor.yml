@@ -1,0 +1,137 @@
+name: Render Keep-Alive & Health Monitor
+
+on:
+  schedule:
+    # Runs every 14 minutes to prevent Render free-tier 15-minute inactivity spin-down
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "Optional custom URL to probe (defaults to RENDER_SERVICE_URL secret or fallback)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  ping-and-monitor:
+    name: Keep-Alive Probe & Availability Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe Render Health Endpoint
+        id: probe
+        env:
+          SERVICE_URL: ${{ inputs.target_url || secrets.RENDER_SERVICE_URL || 'https://adaptive-rag-router.onrender.com' }}
+        run: |
+          # Strip trailing slash if present
+          CLEAN_URL="${SERVICE_URL%/}"
+          HEALTH_URL="${CLEAN_URL}/health"
+          echo "Target Health URL: $HEALTH_URL"
+          
+          MAX_RETRIES=3
+          RETRY_DELAY=15
+          SUCCESS=0
+          FINAL_CODE=0
+          FINAL_RESPONSE=""
+          
+          for attempt in $(seq 1 $MAX_RETRIES); do
+            echo "Probe attempt $attempt of $MAX_RETRIES..."
+            # Render free-tier cold starts can take 45-60 seconds, so timeout is set to 75 seconds
+            START_TIME=$(date +%s%3N)
+            HTTP_CODE=$(curl -s -L -o response.txt -w "%{http_code}" --max-time 75 "$HEALTH_URL" || echo "000")
+            END_TIME=$(date +%s%3N)
+            LATENCY=$((END_TIME - START_TIME))
+            RESPONSE_BODY=$(cat response.txt 2>/dev/null | head -c 200)
+            
+            echo "Status Code: $HTTP_CODE | Latency: ${LATENCY}ms | Body: $RESPONSE_BODY"
+            
+            if [ "$HTTP_CODE" -eq 200 ]; then
+              echo "✅ Service is HEALTHY and active (HTTP 200) in ${LATENCY}ms"
+              SUCCESS=1
+              FINAL_CODE=200
+              FINAL_RESPONSE="$RESPONSE_BODY"
+              break
+            else
+              echo "⚠️ Attempt $attempt failed with HTTP $HTTP_CODE (cold-start spin up or service issue). Waiting ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
+          
+          echo "status_code=$FINAL_CODE" >> $GITHUB_OUTPUT
+          echo "is_healthy=$SUCCESS" >> $GITHUB_OUTPUT
+          echo "latency_ms=$LATENCY" >> $GITHUB_OUTPUT
+          echo "health_url=$HEALTH_URL" >> $GITHUB_OUTPUT
+          
+          if [ "$SUCCESS" -ne 1 ]; then
+            echo "❌ Service FAILED all $MAX_RETRIES health probe attempts."
+            echo "failure_code=$HTTP_CODE" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Auto-Close Previous Incident If Recovered
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueTitle = '[Alert] Render Service Unresponsive';
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              creator: 'github-actions[bot]'
+            });
+            
+            for (const issue of issues) {
+              if (issue.title === issueTitle) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: `🎉 **Service Recovered**\n\nThe health probe succeeded on run [${context.runId}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}). Endpoint returned \`HTTP 200 OK\`. Closing incident.`
+                });
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  state: 'closed'
+                });
+                console.log(`Closed resolved incident #${issue.number}`);
+              }
+            }
+
+      - name: Open Incident Issue & Email Alert on Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueTitle = '[Alert] Render Service Unresponsive';
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              creator: 'github-actions[bot]'
+            });
+            
+            const existing = issues.find(i => i.title === issueTitle);
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `⚠️ **Incident Ongoing**\n\nHealth probe failed again on run [${context.runId}](${runUrl}).\n\n**Troubleshooting Checklist:**\n1. Check Render Dashboard logs for OOM (Out Of Memory / Exit 137).\n2. Check monthly Free Instance Hours (750h quota).\n3. Check if service is Suspended under Settings.`
+              });
+              console.log(`Updated existing incident #${existing.number}`);
+            } else {
+              const newIssue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                labels: ['incident', 'render-downtime'],
+                body: `## 🚨 Render Service Down Alert\n\nHealth check probe failed after 3 consecutive attempts with a 75-second timeout.\n\n- **Repository:** \`${context.repo.owner}/${context.repo.repo}\`\n- **Failed Run:** [View Workflow Run](${runUrl})\n- **Timestamp (UTC):** ${new Date().toISOString()}\n\n### Potential Causes & Diagnostic Steps\n1. **Monthly Free Instance Hours Exhausted:** Check [Render Dashboard](https://dashboard.render.com/) -> Billing to see if you exceeded 750 free hours.\n2. **Out of Memory (OOM):** Free tier limit is 512MB RAM. If Docker container crashed with code 137, inspect application logs.\n3. **Failed Deployment:** Verify the latest deploy succeeded in the Events tab.\n4. **Account Suspension:** Check your Render account email for any terms or quota notifications.\n\n*Note: This issue will automatically close once the service responds with HTTP 200.*`
+              });
+              console.log(`Opened new incident #${newIssue.data.number}`);
+            }
