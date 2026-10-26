@@ -48,9 +48,9 @@ jobs:
           DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
           if [ -z "$DEPLOY_HOOK" ]; then
-            echo "::error::Secret RENDER_DEPLOY_HOOK_URL is not configured in repository secrets."
-            echo "Please go to Render Dashboard -> Settings -> Deploy Hook, copy the URL, and add it to GitHub Secrets."
-            exit 1
+            echo "::notice::Secret RENDER_DEPLOY_HOOK_URL is not yet configured. Skipping Render deploy hook trigger."
+            echo "To enable automatic zero-downtime deploys on test pass, add RENDER_DEPLOY_HOOK_URL to GitHub Secrets."
+            exit 0
           fi
           echo "Triggering deployment on Render..."
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$DEPLOY_HOOK")
